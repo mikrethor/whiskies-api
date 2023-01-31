@@ -1,0 +1,98 @@
+
+
+sdk use java 21.3.0.r17-grl
+export  GRAALVM_HOME=~/.sdkman/candidates/java/21.3.0.r17-grl/
+./mvnw clean package -DskipTests -Pnative
+
+export GRAALVM_HOME=~/.sdkman/candidates/java/21.0.0.r11-grl
+export JAVA_HOME=~/.sdkman/candidates/java/21.0.0.r11-grl
+
+mvn spring-boot:build-image -Pnative
+
+
+docker run --name some-postgres -e POSTGRES_USER=compose-postgres -e POSTGRES_PASSWORD=compose-postgres -e POSTGRES_DB=compose-postgres -p 5432:5432 -d postgres
+
+https://linux.die.net/man/1/upx
+
+https://github.com/paketo-buildpacks/native-image/issues/59
+
+rest stackoverflow :
+@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator::class, property="id")
+
+
+Kung Fury 2015
+
+Distribution
+    David Sandberg
+    David Sandberg
+Kung Fury
+    David Hasselhoff
+    David Hasselhoff
+Hoff 9000
+    Jorma Taccone
+    Jorma Taccone
+Gitler
+    Eleni Young
+    Eleni Young
+Barbarianna
+    Leopold Nilsson
+    Leopold
+    Nilsson
+Hackerman
+    Helene Ahlson
+    Helene
+    Ahlson
+Katana
+    Andreas Cahling
+    Andreas
+    Cahling
+Thor
+    Erik Hörnqvist
+    Erik Hörnqvist
+Triceracop
+    Steven Chew
+    Steven Chew
+Dragon
+    Per-Henrik Arvidius
+    Per-Henrik
+    Arvidius
+Chief
+    Eos Karlsson
+    Eos Karlsson
+Ninja rouge
+    Alexandra Shipp
+    Alexandra
+    Shipp
+
+    Nathan Cooper
+    Nathan
+    Cooper
+Victor Lindgren
+Victor
+Lindgren
+
+Mattias Andersson
+Mattias
+Andersson
+
+
+Kung Fury 2 2022
+
+David Sandberg
+David Sandberg
+Arnold Schwarzenegger (The President)
+Arnold Schwarzenegger
+The President
+Michael Fassbender (Colt Magnum)
+Michael Fassbender
+Colt Magnum
+Ralf Moeller (Thor)
+Ralf Moeller
+Thor
+Eleni Young (Barbarianna)
+Eleni Young
+Barbarianna
+
+openapi after first code
+
+https://www.mscharhag.com/api-design/rest-many-to-many-relations
