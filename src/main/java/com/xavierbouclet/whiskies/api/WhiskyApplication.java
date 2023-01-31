@@ -1,8 +1,8 @@
-package com.xavierbouclet.demo;
+package com.xavierbouclet.whiskies.api;
 
-import com.xavierbouclet.demo.model.Whisky;
-import com.xavierbouclet.demo.repository.WhiskyRepository;
-import com.xavierbouclet.demo.service.WhiskyService;
+import com.xavierbouclet.whiskies.api.model.Whisky;
+import com.xavierbouclet.whiskies.api.repository.WhiskyRepository;
+import com.xavierbouclet.whiskies.api.service.WhiskyService;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.boot.CommandLineRunner;
@@ -25,14 +25,24 @@ public class WhiskyApplication {
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(WhiskyRepository repository, ObservationRegistry registry) {
+    WebClient webClient() {
+        return  WebClient.builder().baseUrl("http://localhost:3000")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+    }
+
+    @Bean
+    HttpServiceProxyFactory proxyFactory(WebClient client) {
+        return HttpServiceProxyFactory.builder(WebClientAdapter.forClient(client)).build();
+    }
+
+    @Bean
+    WhiskyService whiskyService(HttpServiceProxyFactory factory) {
+        return factory.createClient(WhiskyService.class);
+    }
+
+    @Bean
+    CommandLineRunner commandLineRunner(WhiskyService service, WhiskyRepository repository, ObservationRegistry registry) {
         return args -> {
-
-            WebClient client = WebClient.builder().baseUrl("http://localhost:3000")
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-            HttpServiceProxyFactory factory = HttpServiceProxyFactory.builder(WebClientAdapter.forClient(client)).build();
-            WhiskyService service = factory.createClient(WhiskyService.class);
-
             var posts = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
                     .lowCardinalityKeyValue("some-value", "88")
                     .observe(service::loadAll);
@@ -43,8 +53,6 @@ public class WhiskyApplication {
                             whisky.getPrice(),
                             whisky.getRating(),
                             whisky.getRegion())).toList()));
-
-
         };
     }
 
