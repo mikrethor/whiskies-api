@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.xavierbouclet</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>whiskies-api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>whiskies-api</name>
     <description>whiskies-api</description>
