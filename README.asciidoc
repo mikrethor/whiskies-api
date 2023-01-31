@@ -7,13 +7,18 @@ export  GRAALVM_HOME=~/.sdkman/candidates/java/22.3.r17-grl/
 export GRAALVM_HOME=~/.sdkman/candidates/java/22.3.r17-grl
 export JAVA_HOME=~/.sdkman/candidates/java/22.3.r17-grl
 
-mvn spring-boot:build-image -Pnative
+chmod +x target/whiskies-api-1.0.0-SNAPSHOT-runner
 
-
-docker run --name some-postgres -e POSTGRES_USER=compose-postgres -e POSTGRES_PASSWORD=compose-postgres -e POSTGRES_DB=compose-postgres -p 5432:5432 -d postgres
+docker run --name some-postgres -e POSTGRES_USER=whisky -e POSTGRES_PASSWORD=whisky -e POSTGRES_DB=whisky -p 5432:5432 -d postgres
 
 https://linux.die.net/man/1/upx
 
 https://github.com/paketo-buildpacks/native-image/issues/59
 
 json-server --watch whiskies.json
+
+./mvnw compile quarkus:dev
+
+./mvnw package -Pnative
+
+docker run --name some-postgres -e POSTGRES_USER=compose-postgres -e POSTGRES_PASSWORD=compose-postgres -e POSTGRES_DB=compose-postgres -p 5432:5432 -d postgres
