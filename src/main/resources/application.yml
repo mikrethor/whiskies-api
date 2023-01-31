@@ -1,0 +1,20 @@
+micronaut:
+  application:
+    name: whiskies-api
+datasources:
+  default:
+    driver-class-name: org.postgresql.Driver
+    db-type: postgres
+    jdbc-url: jdbc:postgresql://localhost:5432/whisky
+    username: whisky
+    password: whisky
+netty:
+  default:
+    allocator:
+      max-order: 3
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
