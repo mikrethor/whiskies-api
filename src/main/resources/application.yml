@@ -11,6 +11,13 @@ spring:
     init:
       mode: always
 
+
+
+client:
+  whisky:
+    service:
+      url: https://my-json-server.typicode.com/mikrethor/whiskies
+
 management:
   endpoint:
     health:
@@ -48,3 +55,4 @@ logging:
   level:
     datasource-query-logger: INFO
     org.springframework.data: DEBUG
+

@@ -10,6 +10,7 @@ import java.util.UUID;
 public class Whisky {
 
     @Id
+    @JsonProperty("id")
     private UUID id;
     @JsonProperty("Bottle")
     private String bottle;
@@ -33,43 +34,43 @@ public class Whisky {
         this.region = region;
     }
 
-    public UUID getId() {
+    public UUID id() {
         return id;
     }
 
-    public void setId(UUID id) {
+    public void id(UUID id) {
         this.id = id;
     }
 
-    public String getBottle() {
+    public String bottle() {
         return bottle;
     }
 
-    public void setBottle(String bottle) {
+    public void bottle(String bottle) {
         this.bottle = bottle;
     }
 
-    public String getPrice() {
+    public String price() {
         return price;
     }
 
-    public void setPrice(String price) {
+    public void price(String price) {
         this.price = price;
     }
 
-    public String getRating() {
+    public String rating() {
         return rating;
     }
 
-    public void setRating(String rating) {
+    public void rating(String rating) {
         this.rating = rating;
     }
 
-    public String getRegion() {
+    public String region() {
         return region;
     }
 
-    public void setRegion(String region) {
+    public void region(String region) {
         this.region = region;
     }
 }

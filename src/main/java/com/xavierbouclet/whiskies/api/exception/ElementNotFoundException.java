@@ -8,7 +8,6 @@ import java.util.UUID;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ElementNotFoundException extends RuntimeException {
 
-
     private final UUID id;
     public ElementNotFoundException(UUID id) {
         this.id=id;
