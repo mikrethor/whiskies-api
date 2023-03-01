@@ -6,7 +6,6 @@ import jakarta.persistence.Id
 import java.util.*
 
 @Entity
-
 data class Whisky(
     @Id
     @JsonProperty("id")
