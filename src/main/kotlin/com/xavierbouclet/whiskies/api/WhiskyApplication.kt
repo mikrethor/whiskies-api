@@ -1,62 +1,70 @@
-package com.xavierbouclet.whiskies.api;
+package com.xavierbouclet.whiskies.api
 
-import com.xavierbouclet.whiskies.api.configuration.WhiskyClientProperties;
-import com.xavierbouclet.whiskies.api.model.Whisky;
-import com.xavierbouclet.whiskies.api.repository.WhiskyRepository;
-import com.xavierbouclet.whiskies.api.service.WhiskyService;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.support.WebClientAdapter;
-import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-
-import java.util.UUID;
+import com.xavierbouclet.whiskies.api.configuration.WhiskyClientProperties
+import com.xavierbouclet.whiskies.api.model.Whisky
+import com.xavierbouclet.whiskies.api.repository.WhiskyRepository
+import com.xavierbouclet.whiskies.api.service.WhiskyService
+import io.micrometer.observation.Observation
+import io.micrometer.observation.ObservationRegistry
+import org.springframework.boot.CommandLineRunner
+import org.springframework.boot.SpringApplication
+import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.support.WebClientAdapter
+import org.springframework.web.service.invoker.HttpServiceProxyFactory
+import java.util.*
+import java.util.function.Supplier
 
 @SpringBootApplication
-@EnableConfigurationProperties(WhiskyClientProperties.class)
-public class WhiskyApplication {
+@EnableConfigurationProperties(WhiskyClientProperties::class)
+class WhiskyApplication {
+    @Bean
+    fun webClient(whiskyClientProperties: WhiskyClientProperties) =
+        WebClient.builder()
+            .baseUrl(whiskyClientProperties.url)
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .build()
 
-    public static void main(String[] args) {
-        SpringApplication.run(WhiskyApplication.class, args);
-    }
 
     @Bean
-    WebClient webClient(WhiskyClientProperties whiskyClientProperties) {
-        return  WebClient.builder().baseUrl(whiskyClientProperties.url())
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-    }
+    fun proxyFactory(client: WebClient) =
+        HttpServiceProxyFactory
+            .builder(WebClientAdapter.forClient(client))
+            .build()
+
 
     @Bean
-    HttpServiceProxyFactory proxyFactory(WebClient client) {
-        return HttpServiceProxyFactory.builder(WebClientAdapter.forClient(client)).build();
-    }
+    fun whiskyService(proxyFactory: HttpServiceProxyFactory) = proxyFactory.createClient(WhiskyService::class.java)
+
 
     @Bean
-    WhiskyService whiskyService(HttpServiceProxyFactory factory) {
-        return factory.createClient(WhiskyService.class);
-    }
-
-    @Bean
-    CommandLineRunner commandLineRunner(WhiskyService service, WhiskyRepository repository, ObservationRegistry registry) {
-        return args -> {
-            var whiskies = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
-                    .lowCardinalityKeyValue("some-value", "88")
-                    .observe(service::loadAll);
-
+    fun commandLineRunner(service: WhiskyService,
+                          repository: WhiskyRepository,
+                          registry: ObservationRegistry): CommandLineRunner {
+        return CommandLineRunner { _: Array<String> ->
+            val whiskies = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
+                .lowCardinalityKeyValue("some-value", "88")
+                .observe<List<Whisky>> { service.loadAll() }
             Observation.createNotStarted("whisky-repository.save-all", registry)
-                    .observe(() -> repository.saveAll(whiskies.stream().map(whisky -> new Whisky(UUID.nameUUIDFromBytes(whisky.bottle().getBytes()),
+                .observe(Supplier {
+                    repository.saveAll(whiskies.stream().map { whisky: Whisky ->
+                        Whisky(
+                            UUID.nameUUIDFromBytes(whisky.bottle().toByteArray()),
                             whisky.bottle(),
                             whisky.price(),
                             whisky.rating(),
-                            whisky.region())).toList()));
-        };
+                            whisky.region()
+                        )
+                    }.toList())
+                })
+        }
     }
+}
 
+fun main(args: Array<String>) {
+    SpringApplication.run(WhiskyApplication::class.java, *args)
 }
