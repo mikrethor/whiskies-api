@@ -42,9 +42,11 @@ class WhiskyApplication {
 
 
     @Bean
-    fun commandLineRunner(service: WhiskyService,
-                          repository: WhiskyRepository,
-                          registry: ObservationRegistry): CommandLineRunner {
+    fun commandLineRunner(
+        service: WhiskyService,
+        repository: WhiskyRepository,
+        registry: ObservationRegistry
+    ): CommandLineRunner {
         return CommandLineRunner { _: Array<String> ->
             val whiskies = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
                 .lowCardinalityKeyValue("some-value", "88")
@@ -53,11 +55,11 @@ class WhiskyApplication {
                 .observe(Supplier {
                     repository.saveAll(whiskies.stream().map { whisky: Whisky ->
                         Whisky(
-                            UUID.nameUUIDFromBytes(whisky.bottle().toByteArray()),
-                            whisky.bottle(),
-                            whisky.price(),
-                            whisky.rating(),
-                            whisky.region()
+                            id = UUID.nameUUIDFromBytes(whisky.bottle.toByteArray()),
+                            bottle = whisky.bottle,
+                            price = whisky.price,
+                            rating = whisky.rating,
+                            region = whisky.region
                         )
                     }.toList())
                 })
