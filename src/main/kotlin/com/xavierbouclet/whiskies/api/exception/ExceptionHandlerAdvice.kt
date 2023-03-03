@@ -12,7 +12,7 @@ class ExceptionHandlerAdvice {
     @ExceptionHandler(ElementNotFoundException::class)
     @Throws(URISyntaxException::class)
     fun handlePostNotFoundException(exception: ElementNotFoundException): ProblemDetail {
-        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.message!!)
+        val problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.message)
         problemDetail.setProperty("id", exception.id)
         problemDetail.type = URI("http://localhost:8080/problems/post-not-found")
         return problemDetail

@@ -53,7 +53,7 @@ class WhiskyApplication {
                 .observe<List<Whisky>> { service.loadAll() }
             Observation.createNotStarted("whisky-repository.save-all", registry)
                 .observe(Supplier {
-                    repository.saveAll(whiskies.stream().map { whisky: Whisky ->
+                    repository.saveAll(whiskies.map { whisky: Whisky ->
                         Whisky(
                             id = UUID.nameUUIDFromBytes(whisky.bottle.toByteArray()),
                             bottle = whisky.bottle,

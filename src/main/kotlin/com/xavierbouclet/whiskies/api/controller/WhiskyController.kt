@@ -20,6 +20,6 @@ class WhiskyController(private val postRepository: WhiskyRepository) {
 
     @GetMapping("/{id}")
     fun findById(@PathVariable("id") id: UUID): Whisky {
-        return postRepository.findByIdOrNull(id) ?: throw ElementNotFoundException(id, "Element not found")
+        return postRepository.findByIdOrNull(id) ?: throw ElementNotFoundException(id,"Not Found")
     }
 }
