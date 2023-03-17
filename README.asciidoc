@@ -1,19 +1,52 @@
+= Devriez-vous migrer à Spring Boot 3
 
+Ce code est la sortie de la présentation "Devriez-vous migrer à Spring Boot 3".
 
+Cette API a besoin d'une base de données Postgres :
+
+== Installation
+
+Créer un container pour la base de données Postgres SQL.
+
+[sources, sh]
+----
+docker run --name whisky-api-db -e POSTGRES_USER=whisky -e POSTGRES_PASSWORD=whisky -e POSTGRES_DB=whisky -p 5432:5432 -d postgres
+----
+
+Installer Graal VM et native-image pour pouvoir compiler nativement le code Java.
+
+Installer json-server pour pouvoir exposer l'API client.
+
+[sources, sh]
+----
+npm install -g json-server
+json-server --watch whiskies.json
+----
+[sources, sh]
+----
+sdk install java 22.3.r17-grl
 sdk use java 22.3.r17-grl
-export  GRAALVM_HOME=~/.sdkman/candidates/java/22.3.r17-grl/
-./mvnw clean package -DskipTests -Pnative
-
+ ~/.sdkman/candidates/java/22.3.r17-grl/bin/gu install native-image
 export GRAALVM_HOME=~/.sdkman/candidates/java/22.3.r17-grl
 export JAVA_HOME=~/.sdkman/candidates/java/22.3.r17-grl
+----
 
-mvn spring-boot:build-image -Pnative
+Tenter la compilation native pour votre système d'exploitation.
 
+[sources, sh]
+----
+./mvnw clean package -DskipTests -Pnative
+----
 
-docker run --name some-postgres -e POSTGRES_USER=compose-postgres -e POSTGRES_PASSWORD=compose-postgres -e POSTGRES_DB=compose-postgres -p 5432:5432 -d postgres
+Utilisation des buildpack pour créer un container avec notre application compilée nativemenet pour l'OS du container.
+
+[sources, sh]
+----
+./mvnw spring-boot:build-image -Pnative
+----
+
+== Resources
 
 https://linux.die.net/man/1/upx
-
 https://github.com/paketo-buildpacks/native-image/issues/59
 
-json-server --watch whiskies.json
