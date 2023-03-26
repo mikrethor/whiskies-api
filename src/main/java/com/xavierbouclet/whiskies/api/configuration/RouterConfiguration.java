@@ -34,10 +34,10 @@ public class RouterConfiguration {
                             problemDetail.setProperty("id", ((ElementNotFoundException) e).getId());
                             try {
                                 problemDetail.setType(new URI("http://localhost:8080/problems/post-not-found"));
+                                problemDetail.setInstance(new URI(req.requestPath().toString()));
                             } catch (URISyntaxException ex) {
                                 throw new RuntimeException(ex);
                             }
-
 
                             return EntityResponse.fromObject(problemDetail)
                                     .status(HttpStatus.NOT_FOUND)
