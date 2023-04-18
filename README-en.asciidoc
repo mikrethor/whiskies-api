@@ -1,0 +1,52 @@
+= Should you migrate to Spring Boot 3
+
+This code is the output of the "Should you migrate to Spring Boot 3" presentation.
+
+This API requires a Postgres database:
+
+== Installation
+
+Create a container for the Postgres SQL database.
+
+[sources, sh]
+----
+docker run --name whisky-api-db -e POSTGRES_USER=whisky -e POSTGRES_PASSWORD=whisky -e POSTGRES_DB=whisky -p 5432:5432 -d postgres
+----
+
+Install Graal VM and native-image to be able to natively compile the Java code.
+
+[sources, sh]
+----
+sdk install java 22.3.r17-grl
+sdk use java 22.3.r17-grl
+/.sdkman/candidates/java/22.3.r17-grl/bin/gu install native-image
+export GRAALVM_HOME=/.sdkman/candidates/java/22.3.r17-grl
+export JAVA_HOME=~/.sdkman/candidates/java/22.3.r17-grl
+----
+
+Install json-server to be able to expose the client API.
+
+[sources, sh]
+----
+npm install -g json-server
+json-server --watch whiskies.json
+----
+
+Attempt native compilation for your operating system.
+
+[sources, sh]
+----
+./mvnw clean package -DskipTests -Pnative
+----
+
+Use buildpacks to create a container with our application natively compiled for the container's OS.
+
+[sources, sh]
+----
+./mvnw spring-boot:build-image -Pnative
+----
+
+== Resources
+
+https://linux.die.net/man/1/upx
+https://github.com/paketo-buildpacks/native-image/issues/59
