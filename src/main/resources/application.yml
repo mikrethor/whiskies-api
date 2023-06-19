@@ -11,12 +11,18 @@ spring:
     init:
       mode: always
 
-
-
 client:
   whisky:
     service:
       url: https://my-json-server.typicode.com/mikrethor/whiskies
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
 
 management:
   endpoint:

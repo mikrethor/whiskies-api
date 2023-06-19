@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/api/whiskies")
@@ -23,7 +25,8 @@ public class WhiskyController {
 
     @GetMapping
     public List<Whisky> findAll() {
-        return postRepository.findAll();
+        return StreamSupport.stream(postRepository.findAll().spliterator(), false)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
