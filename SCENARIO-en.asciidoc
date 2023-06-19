@@ -1,0 +1,632 @@
+= Should you migrate to Spring Boot 3
+:source-highlighter: rouge
+
+Hello everyone! I am Xavier Bouclet and today I am gonna talk about "Should you migrate to Spring Boot 3?".
+
+First, who has already migrated to Spring Boot 3?
+
+- half the room
+- a few
+
+I hope you are gonna learn some stuff today.
+
+== Slide 2 - Plan
+
+First, I am gonna introduce myself.
+Second, we will talk a bit about Spring Boot History.
+Then it's gonna be demo time.
+Finally we will end with a few questions.
+
+== Slide 3 - Myself
+
+I am a tech lead with fifteen years of experience in IT.
+I co-organize the Montreal Java User Group and the Devoxx4Kids Quebec Chapter.
+I blog regularly and you can follow this qrcode to my blog.
+If you want to chat with me you can use the twitter handle @XavierBouclet.
+
+== Slide 4 - Spring Boot History
+
+The oldest ones remember that before Spring Boot we had to manage the compatibility between the different frameworks like Spring and Hibernate.
+It was a real nightmare.
+That's when the Spring Boot Idea came in with the first release of Spring Boot in April 2014.
+In March 2018, the version 2 was released to respond to the feedback of the community witha for exemple Spring Webflux and the support of Kotlin out of the box.
+Finally last December, the version 3 has been released with Java 17 and the Jakarta migration.
+
+== Slide 5 - why migrate?
+
+- Use the new features of Spring Framework 6
+- Using new features in Java 17
+- Switching to Jakarta EE10
+- Improved performance and startup time
+- Ahead of Time compiltaion
+- Improved spring security (not in this demo)
+- Cloud native build pack support
+- Security fixes
+- Spring Boot 2 OSS support ends November 18, 2023 (Comm 2025)
+
+== Slide 6 - but the true reason
+
+It's because 3 is greater than 2.
+Joke aside, let's code.
+
+== Slide 7 - demo
+
+You can scan the QrCode to jump to the code of this demo.
+But don't live the room yet.
+
+Go to IDE
+
+== Code 1 - Generate project
+
+We can go to https://start.spring.io/ but better https://start.spring.io/#!type=maven-project
+We select 3.0.6.
+We can change the group id for com.xavierbouclet
+And the artifactID whiskies-api
+And finally add the following dependencies :
+
+- jpa
+- webflux
+- jdbc
+- test
+- actuator
+- postgres
+- validation
+
+Click on "Generate"
+
+== Code 2 - Open IntelliJ
+
+Open the project in Intellij
+
+== Code 3 - Declarative Rest Client
+
+Add bean declarative rest client WhiskyService
+
+[source, java]
+----
+    @Bean
+    WhiskyService whiskyService(HttpServiceProxyFactory factory) {
+        return factory.createClient(WhiskyService.class);
+    }
+----
+
+shortcut : wbeanexfeign
+
+Let's code the interface of our client.
+
+[source, java]
+----
+public interface WhiskyService {
+
+    @GetExchange("/whiskies")
+    List<Whisky> loadAll();
+}
+----
+shortcut : wbeanexfeign
+
+
+== Code 4 - The proxyFactory
+
+Add bean proxyFactory
+
+[source, java]
+----
+    @Bean
+    HttpServiceProxyFactory proxyFactory(WebClient client) {
+        return HttpServiceProxyFactory.builder(WebClientAdapter.forClient(client)).build();
+    }
+----
+
+shortcut : wbeanproxy
+
+== Code 5 - the webclient
+
+Add bean webClient
+
+[source, java]
+----
+   @Bean
+    WebClient webClient(WhiskyClientProperties whiskyClientProperties) {
+        return  WebClient.builder().baseUrl(whiskyClientProperties.url())
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
+    }
+----
+
+shortcut : wbeanwebclient
+
+== Code 6 - create WhiskyClientProperties
+
+Create WhiskyClientProperties to store the url
+
+[source, java]
+----
+import jakarta.validation.constraints.NotNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+@Validated
+@ConfigurationProperties(prefix = "client.whisky.service")
+public record WhiskyClientProperties(@NotNull String url) {
+}
+----
+
+shortcut : wproperties
+
+== Code 7 - add some data
+
+Add CommandLineRunner
+
+[source, java]
+----
+    @Bean
+    CommandLineRunner commandLineRunner(WhiskyService service, WhiskyRepository repository) {
+        return args -> {
+            var whiskies = service.loadAll();
+
+            repository.saveAll(whiskies.stream().map(whisky -> new Whisky(UUID.nameUUIDFromBytes(whisky.bottle().getBytes()),
+                            whisky.bottle(),
+                            whisky.price(),
+                            whisky.rating(),
+                            whisky.region())).toList());
+        };
+    }
+----
+
+shortcut : wclr1
+
+== Code 8 - create the entity
+
+Add the informations  for the entity
+
+[source, java]
+----
+@Entity
+public class Whisky {
+
+    @Id
+    @JsonProperty("id")
+    private UUID id;
+    @JsonProperty("Bottle")
+    private String bottle;
+    @JsonProperty("Price")
+    private String price;
+
+    @JsonProperty("Rating")
+    private String rating;
+    @JsonProperty("Region")
+    private String region;
+
+    protected Whisky() {
+    }
+
+    public Whisky(UUID id, String bottle, String price, String rating, String region) {
+        this();
+        this.id = id;
+        this.bottle = bottle;
+        this.price = price;
+        this.rating = rating;
+        this.region = region;
+    }
+    ....
+}
+----
+
+== Code 9 - create the repository
+
+Add the informations for the repository
+
+[source, java]
+----
+public interface WhiskyRepository extends ListPagingAndSortingRepository<Whisky, UUID>, ListCrudRepository<Whisky, UUID> {
+}
+----
+
+shortcut : wrepo1 and wrepo2
+
+== Code 10 - Add the client url in the application.yml file
+
+shortcut : ymlclient
+
+[source, yaml]
+----
+client:
+  whisky:
+    service:
+      url: https://my-json-server.typicode.com/mikrethor/whiskies
+----
+
+== Code 11 - Add the database in the application.yml file
+
+shortcut : ymldb
+
+[source, yaml]
+----
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/whisky
+    username: whisky
+    password: whisky
+  jpa:
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      mode: always
+----
+
+== Code 12 - Add data to the db
+
+Add a schema.sql file under src/main/resources.
+
+[source, sql]
+----
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- schema.sql
+CREATE TABLE IF NOT EXISTS WHISKY (
+    id UUID NOT NULL DEFAULT uuid_generate_v4(),
+    bottle VARCHAR(255) NOT NULL,
+    price VARCHAR(255) NOT NULL,
+    rating VARCHAR(255) NOT NULL,
+    region VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id)
+);
+----
+
+shortcut : wschema
+
+== Code 13 - Start the db
+
+[source, sh]
+----
+docker start whisky-api-db
+----
+
+In case it doesn't work :
+
+[source, sh]
+----
+docker run --name whisky-api-db -e POSTGRES_USER=whisky -e POSTGRES_PASSWORD=whisky -e POSTGRES_DB=whisky -p 5432:5432 -d postgres
+----
+
+== Code 14 - Create the controller
+
+Create WhiskyController
+Add endpoint findAll
+Add endpoint findById
+
+[source, java]
+----
+@RestController
+@RequestMapping("/api/whiskies")
+public class WhiskyController {
+
+    private final WhiskyRepository postRepository;
+
+    public WhiskyController(WhiskyRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    @GetMapping
+    public List<Whisky> findAll() {
+        return postRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Whisky findById(@PathVariable("id") UUID id) {
+        return postRepository.findById(id).orElse(null);
+    }
+}
+----
+
+shortcut : wcontroller
+
+== Code 15 - Execute the main class
+
+Execute curl command getAll
+
+[source, bash]
+----
+curl -i http://localhost:8080/api/whiskies
+----
+
+Execute curl command getById
+
+[source, bash]
+----
+curl -i http://localhost:8080/api/whiskies/c31f148e-e202-3e82-8ea8-2cb305c49322
+----
+
+Execute curl command formatted getById
+
+[source, bash]
+----
+curl http://localhost:8080/api/whiskies/c31f148e-e202-3e82-8ea8-2cb305c49322 | json_pp
+----
+
+Execute curl command getById fakeId
+
+[source, bash]
+----
+curl -i http://localhost:8080/api/whiskies/e96940f3-1145-4cb3-8246-c9b9d4399e89
+----
+
+Status code 200, it's not what we expect so let's handle that
+
+== Code 16 - Add error handling
+
+Add ElementNotFoundException
+
+[source, java]
+----
+@ResponseStatus(HttpStatus.NOT_FOUND)
+public class ElementNotFoundException extends RuntimeException {
+
+    private final UUID id;
+    public ElementNotFoundException(UUID id) {
+        this.id=id;
+    }
+    public UUID getId() {
+        return id;
+    }
+}
+----
+
+shortcut : wexception
+
+Add ExceptionHandlerAdvice and talk about RFC7807
+
+[source, java]
+----
+@RestControllerAdvice
+public class ExceptionHandlerAdvice {
+
+    @ExceptionHandler(ElementNotFoundException.class)
+    public ProblemDetail handlePostNotFoundException(ElementNotFoundException exception) throws URISyntaxException {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+        problemDetail.setProperty("id", exception.getId());
+        problemDetail.setType(new URI("http://localhost:8080/problems/post-not-found"));
+        return problemDetail;
+
+    }
+}
+----
+
+shortcut : whandler
+
+== Code 17 - Execute the main class
+
+Execute curl command getById fakeId
+
+[source, bash]
+----
+curl -i http://localhost:8080/api/whiskies/e96940f3-1145-4cb3-8246-c9b9d4399e89
+----
+
+Status code 404, it's what we expected.
+
+== Code 18 - Observability
+
+Add wobserver in the pom
+
+[source, xml]
+----
+<dependency>
+     <groupId>io.micrometer</groupId>
+     <artifactId>micrometer-tracing-bridge-brave</artifactId>
+</dependency>
+<dependency>
+     <groupId>io.zipkin.reporter2</groupId>
+     <artifactId>zipkin-reporter-brave</artifactId>
+</dependency>
+<dependency>
+     <groupId>net.ttddyy.observation</groupId>
+     <artifactId>datasource-micrometer-spring-boot</artifactId>
+     <version>1.0.1</version>
+</dependency>
+----
+
+Add ymlmonitor in the yaml
+
+[source, yaml]
+----
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+
+jdbc:
+  datasource-proxy:
+    # enable and configure query logging
+    query:
+      # Enable logging all queries to the log.
+      enable-logging: true
+      # Severity of query logger.
+      log-level: DEBUG
+      # Name of query logger.
+      logger-name: datasource-query-logger
+    # Logging to use for logging queries.
+    logging: slf4j
+    # Use multiline output for logging query.
+    multiline: false
+    # How to Include the Bind Parameter Values in Spans
+    include-parameter-values: false
+    # Use json output for logging query.
+    json-format: false
+  # Specify jdbc.includes property. By default, the property is set to include(observe) all(CONNECTION, QUERY, FETCH) types.
+  includes: connection,fetch,query
+
+logging:
+  level:
+    datasource-query-logger: INFO
+    org.springframework.data: DEBUG
+----
+
+Refresh the pom
+
+== Code 19 - Launch main class
+
+[source, sh]
+----
+docker start whisky-api-monitor
+----
+
+In case it doesn't work :
+
+[source, sh]
+----
+docker run --name whisky-api-monitor  -p 9411:9411 -d openzipkin/zipkin
+----
+
+Repeat some curl commands
+
+Go to open zipkin localhost:9411/
+
+== Code 20 - Fine tune observability
+
+Modify commandLineRunner (wclr2)
+Add the bean ObservationRegistry registry to the parameters of our commandLineRunner
+
+[source, java]
+----
+    @Bean
+    CommandLineRunner commandLineRunner(WhiskyService service, WhiskyRepository repository, ObservationRegistry registry) {
+        return args -> {
+            var whiskies = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
+                    .lowCardinalityKeyValue("some-value", "88")
+                    .observe(service::loadAll);
+
+            Observation.createNotStarted("whisky-repository.save-all", registry)
+                    .observe(() -> repository.saveAll(whiskies.stream().map(whisky -> new Whisky(UUID.nameUUIDFromBytes(whisky.bottle().getBytes()),
+                            whisky.bottle(),
+                            whisky.price(),
+                            whisky.rating(),
+                            whisky.region())).toList()));
+        };
+    }
+----
+
+shortcut : wclr2
+
+Repeat some curl commands
+Go to open zipkin localhost:9411/
+
+== Code 21 - Going native
+
+Now we are gonna try to compile native our api with Graal VM.
+
+Add profile native pour le buildpack with wnative.
+
+[source, xml]
+----
+    <profiles>
+        <profile>
+            <id>native</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.graalvm.buildtools</groupId>
+                        <artifactId>native-maven-plugin</artifactId>
+                        <extensions>true</extensions>
+                        <executions>
+                            <execution>
+                                <id>build-native</id>
+                                <goals>
+                                    <goal>compile-no-fork</goal>
+                                </goals>
+                                <phase>package</phase>
+                            </execution>
+                            <execution>
+                                <id>test-native</id>
+                                <goals>
+                                    <goal>test</goal>
+                                </goals>
+                                <phase>test</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <buildArgs>
+                                <arg>--initialize-at-build-time=ch.qos.logback</arg>
+                            </buildArgs>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <image>
+                                <builder>dashaun/builder-arm:tiny</builder>
+                                <env>
+                                    <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
+                                    <BP_BINARY_COMPRESSION_METHOD>upx</BP_BINARY_COMPRESSION_METHOD>
+                                    <BP_JVM_VERSION>17</BP_JVM_VERSION>
+                                </env>
+                            </image>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+----
+
+shortcut : wnative
+
+Be sure to add the following variables
+
+[source, sh]
+----
+export GRAALVM_HOME=~/.sdkman/candidates/java/22.3.r17-grl
+export JAVA_HOME=~/.sdkman/candidates/java/22.3.r17-grl
+----
+
+Compile natively.
+
+[source, sh]
+----
+./mvnw package -Pnative -DskipTests
+----
+
+We could use buildpack but not working on ARM.
+
+[source, sh]
+----
+./mvnw spring-boot:build-image -Pnative -DskipTests
+----
+
+--> End code scenario
+
+-> Diapo 8
+
+On this slide, we can compare some of the frameworks that allow native out of the box.
+We can see that Spring Boot 3 improve things compared to Spring Boot 2.
+
+-> Diapo 9
+
+With buildpack, which is the way to go to build Spring Boot as a container (native or Jar).
+We can obtain a native version of this api with a container with a size of sixty-three megs.
+
+How come?
+
+It uses upx to compress the executable. I was not able to do it because it doesn't work either on ARM.
+
+-> Diapo 10
+
+That's the end of the talk.
+Do you have any question?
+
+-> Diapo 11
+
+Thank you for your attention
+
+-> Diapo 12
+
+On this slide, you have some resources to follow up on the Spring boot 3 migration

@@ -17,11 +17,11 @@ Install Graal VM and native-image to be able to natively compile the Java code.
 
 [sources, sh]
 ----
-sdk install java 22.3.r17-grl
-sdk use java 22.3.r17-grl
-/.sdkman/candidates/java/22.3.r17-grl/bin/gu install native-image
-export GRAALVM_HOME=/.sdkman/candidates/java/22.3.r17-grl
-export JAVA_HOME=~/.sdkman/candidates/java/22.3.r17-grl
+sdk install java 22.3.r19-grl
+sdk use java 22.3.r19-grl
+~/.sdkman/candidates/java/22.3.r19-grl/bin/gu install native-image
+export GRAALVM_HOME=/.sdkman/candidates/java/22.3.r19-grl
+export JAVA_HOME=~/.sdkman/candidates/java/22.3.r19-grl
 ----
 
 Install json-server to be able to expose the client API.
