@@ -9,10 +9,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.support.WebClientAdapter;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.util.UUID;
@@ -25,18 +23,17 @@ public class WhiskyApplication {
     }
 
     @Bean
-    WebClient webClient() {
-        return  WebClient.builder().baseUrl("http://localhost:3000")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
-    }
+    WhiskyService whiskyService() {
 
-    @Bean
-    HttpServiceProxyFactory proxyFactory(WebClient client) {
-        return HttpServiceProxyFactory.builder(WebClientAdapter.forClient(client)).build();
-    }
+        RestClient restClient = RestClient.builder()
+                .baseUrl("http://localhost:3000")
+                .build();
 
-    @Bean
-    WhiskyService whiskyService(HttpServiceProxyFactory factory) {
+        HttpServiceProxyFactory factory =
+                HttpServiceProxyFactory.builderFor(
+                        RestClientAdapter.create(restClient)
+                ).build();
+
         return factory.createClient(WhiskyService.class);
     }
 

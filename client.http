@@ -1,0 +1,6 @@
+GET http://localhost:8080/api/whiskies
+Accept: application/json
+
+<> 2026-02-15T172147.200.json
+
+###
