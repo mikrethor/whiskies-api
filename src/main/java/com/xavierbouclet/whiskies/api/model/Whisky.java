@@ -1,5 +1,6 @@
 package com.xavierbouclet.whiskies.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -45,6 +46,7 @@ public class Whisky implements Persistable<UUID> {
         return id;
     }
 
+    @JsonIgnore
     @Override
     public boolean isNew() {
         return this.isNew;
