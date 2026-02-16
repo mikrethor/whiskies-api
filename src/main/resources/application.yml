@@ -3,26 +3,11 @@ spring:
     url: r2dbc:postgresql://localhost:5432/whisky
     username: whisky
     password: whisky
-#  jpa:
-#    hibernate:
-#      ddl-auto: none
+
   sql:
     init:
       mode: always
 
-management:
-  endpoint:
-    health:
-      show-details: always
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  tracing:
-    sampling:
-      probability: 1.0
-
 logging:
   level:
-    datasource-query-logger: INFO
     org.springframework.data: DEBUG
