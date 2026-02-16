@@ -14,13 +14,16 @@ public class Whisky implements Persistable<UUID> {
 
     @Id
     private UUID id;
+
     @JsonProperty("Bottle")
     private String bottle;
+
     @JsonProperty("Price")
     private String price;
 
     @JsonProperty("Rating")
     private String rating;
+
     @JsonProperty("Region")
     private String region;
 
