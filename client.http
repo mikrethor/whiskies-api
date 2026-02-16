@@ -1,6 +1,12 @@
+### Get all elements
 GET http://localhost:8080/api/whiskies
 Accept: application/json
 
-<> 2026-02-15T172147.200.json
+### Get the element with the id 7ef29e7f-9582-4012-9d6a-592b0b91ef3b
+GET http://localhost:8080/api/whiskies/7ef29e7f-9582-4012-9d6a-592b0b91ef3b
+Accept: application/json
 
-###
+### Get a not found
+GET http://localhost:8080/api/whiskies/182ee669-6651-4add-bc45-b78b227c636f
+Accept: application/json
+
