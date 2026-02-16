@@ -30,4 +30,9 @@ public class WhiskyController {
     public Whisky findById(@PathVariable("id") UUID id) {
         return postRepository.findById(id).orElseThrow(()->new ElementNotFoundException(id));
     }
+
+    @GetMapping("/thread")
+    public String thread() {
+        return Thread.currentThread().toString();
+    }
 }
