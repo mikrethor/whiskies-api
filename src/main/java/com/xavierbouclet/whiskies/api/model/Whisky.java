@@ -1,13 +1,15 @@
 package com.xavierbouclet.whiskies.api.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.UUID;
 
-@Entity
-public class Whisky {
+@Table
+public class Whisky implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -21,11 +23,17 @@ public class Whisky {
     @JsonProperty("Region")
     private String region;
 
+    @Transient
+    private boolean isNew = false;
+
     protected Whisky() {
     }
 
     public Whisky(UUID id, String bottle, String price, String rating, String region) {
         this();
+        if (id == null) {
+            this.isNew = true;
+        }
         this.id = id;
         this.bottle = bottle;
         this.price = price;
@@ -35,6 +43,11 @@ public class Whisky {
 
     public UUID getId() {
         return id;
+    }
+
+    @Override
+    public boolean isNew() {
+        return this.isNew;
     }
 
     public void setId(UUID id) {

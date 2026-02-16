@@ -3,20 +3,20 @@ package com.xavierbouclet.whiskies.api;
 import com.xavierbouclet.whiskies.api.model.Whisky;
 import com.xavierbouclet.whiskies.api.repository.WhiskyRepository;
 import com.xavierbouclet.whiskies.api.service.WhiskyService;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.support.RestClientAdapter;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
-
-import java.util.UUID;
 
 @SpringBootApplication
 public class WhiskyApplication {
+
+    private static final Logger log = LoggerFactory.getLogger(WhiskyApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(WhiskyApplication.class, args);
@@ -25,32 +25,35 @@ public class WhiskyApplication {
     @Bean
     WhiskyService whiskyService() {
 
-        RestClient restClient = RestClient.builder()
+        WebClient webClient = WebClient.builder()
                 .baseUrl("http://localhost:3000")
                 .build();
 
         HttpServiceProxyFactory factory =
                 HttpServiceProxyFactory.builderFor(
-                        RestClientAdapter.create(restClient)
+                        WebClientAdapter.create(webClient)
                 ).build();
 
         return factory.createClient(WhiskyService.class);
     }
 
     @Bean
-    CommandLineRunner commandLineRunner(WhiskyService service, WhiskyRepository repository, ObservationRegistry registry) {
-        return args -> {
-            var posts = Observation.createNotStarted("json-place-holder.load-whiskies", registry)
-                    .lowCardinalityKeyValue("some-value", "88")
-                    .observe(service::loadAll);
-
-            Observation.createNotStarted("whisky-repository.save-all", registry)
-                    .observe(() -> repository.saveAll(posts.stream().map(whisky -> new Whisky(UUID.nameUUIDFromBytes(whisky.getBottle().getBytes()),
-                            whisky.getBottle(),
-                            whisky.getPrice(),
-                            whisky.getRating(),
-                            whisky.getRegion())).toList()));
-        };
+    CommandLineRunner seed(WhiskyService service, WhiskyRepository repository) {
+        return _ -> repository.saveAll(
+                        service.loadAll()
+                                .map(w -> new Whisky(
+                                        null,
+                                        w.getBottle(),
+                                        w.getPrice(),
+                                        w.getRating(),
+                                        w.getRegion()
+                                ))
+                )
+                .doOnNext(w -> log.info("Saved {}", w.getBottle()))
+                .doOnError(Throwable::printStackTrace)
+                .doOnComplete(() -> log.info("done"))
+                .then()
+                .block();
     }
 
 }

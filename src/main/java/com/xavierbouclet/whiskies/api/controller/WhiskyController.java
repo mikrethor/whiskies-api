@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,12 +23,15 @@ public class WhiskyController {
     }
 
     @GetMapping
-    public List<Whisky> findAll() {
+    public Flux<Whisky> findAll() {
         return postRepository.findAll();
     }
 
     @GetMapping("/{id}")
-    public Whisky findById(@PathVariable("id") UUID id) {
-        return postRepository.findById(id).orElseThrow(()->new ElementNotFoundException(id));
+    public Mono<Whisky> findById(@PathVariable("id") UUID id) {
+        return postRepository.findById(id)
+                .switchIfEmpty(Mono.error(
+                        new ElementNotFoundException(id)
+                ));
     }
 }
